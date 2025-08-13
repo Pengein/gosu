@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>나는 고수를 구분할 수 있을까? 🤔</title>
+
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background-color: #2c3e50;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #ecf0f1;
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+  }
+
+  /* 다크모드 */
+  body.dark-mode {
+    background-color: #1a1a2e;
+    color: #f0f0f0;
+  }
+  body.dark-mode #startScreen,
+  body.dark-mode #quizGameContainer,
+  body.dark-mode #gameOverScreen,
+  body.dark-mode #optionsScreen,
+  body.dark-mode #patchNotesModal {
+    background-color: #1f2041;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  }
+  body.dark-mode .menu-button,
+  body.dark-mode .option-button {
+    background-color: #4b4b7c;
+  }
+  body.dark-mode .menu-button:hover,
+  body.dark-mode .option-button:hover {
+    background-color: #6a6a9b;
+  }
+  body.dark-mode #restartButton {
+    background-color: #be392a;
+  }
+  body.dark-mode #restartButton:hover {
+    background-color: #a02c1f;
+  }
+  body.dark-mode #nextButton {
+    background-color: #d1871a;
+  }
+  body.dark-mode #nextButton:hover {
+    background-color: #b97615;
+  }
+
+  /* 시작 화면 */
+  #startScreen {
+    background-color: #34495e;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    padding: 40px 60px;
+    width: 90%;
+    max-width: 1200px;
+    height: 90%;
+    max-height: 600px;
+    box-sizing: border-box;
+    text-align: center;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  #startScreen h1 {
+    font-family: 'Jua', sans-serif;
+    color: #f1c40f;
+    font-size: 3em;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    white-space: pre-line;
+  }
+
+  .menu-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 70%;
+    max-width: 550px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .menu-button {
+    background-color: #673ab7;
+    color: white;
+    padding: 18px 35px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.8em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    width: 100%;
+  }
+  .menu-button:hover {
+    background-color: #512da8;
+    transform: translateY(-3px);
+  }
+  .menu-button:active {
+    transform: translateY(0);
+  }
+
+  /* 퀴즈 게임 컨테이너 */
+  #quizGameContainer {
+    background-color: #34495e;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    padding: 40px;
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, background-color 0.3s ease, box-shadow 0.3s ease;
+    display: none;
+    min-height: 500px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* 유튜브 플레이어 */
+  #player-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  #player {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+  }
+
+  /* 로딩 스피너 */
+  #player-loading-spinner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px; height: 50px;
+    animation: spin 1s linear infinite;
+    display: none;
+    z-index: 10;
+  }
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg);}
+    100% { transform: translate(-50%, -50%) rotate(360deg);}
+  }
+
+  /* 옵션 컨테이너 */
+  #optionsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+    width: 100%;
+  }
+  /* 옵션 버튼 */
+  .option-button {
+    background-color: #3f51b5;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.3em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    flex-grow: 1;
+    min-width: 120px;
+    max-width: calc(33.333% - 12px);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    box-sizing: border-box;
+  }
+  .option-button:hover {
+    background-color: #303f9f;
+    transform: translateY(-2px);
+  }
+  .option-button:active {
+    transform: translateY(0);
+  }
+
+  /* 피드백 메시지 */
+  #feedbackMessage {
+    margin-top: 25px;
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #e74c3c;
+    min-height: 30px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #feedbackMessage.correct {
+    color: #2ecc71;
+  }
+  body.color-blind-mode #feedbackMessage.correct {
+    color: #007bff;
+  }
+  body.color-blind-mode #feedbackMessage.wrong {
+    color: #ff7f00;
+  }
+
+  /* 다음 버튼 */
+  #nextButton {
+    background-color: #f39c12;
+    color: white;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.8em;
+    cursor: pointer;
+    margin-top: 30px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    display: none;
+  }
+  #nextButton:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+  }
+
+  /* 점수 및 목숨 표시 */
+  #scoreLivesContainer {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-top: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #ecf0f1;
+  }
+  #scoreDisplay, #livesDisplay {
+      min-width: 120px;
+  }
+
+  /* 게임 오버 화면 */
+  #gameOverScreen {
+    display: none;
+    background-color: #34495e;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    padding: 40px;
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    min-height: 400px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  #gameOverScreen h2 {
+    font-family: 'Jua', sans-serif;
+    color: #f1c40f;
+    font-size: 3.5em;
+    margin-bottom: 20px;
+  }
+  #finalScore {
+    font-size: 2.5em;
+    color: #2ecc71;
+    margin-bottom: 30px;
+    font-weight: bold;
+  }
+  #restartButton {
+    background-color: #e74c3c;
+    color: white;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.8em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  }
+  #restartButton:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+  }
+
+  /* 화면 번쩍임 효과 오버레이 */
+  #flashOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+  }
+  @keyframes correctFlash {
+    0% { background-color: rgba(0, 255, 0, 0); opacity: 0; }
+    50% { background-color: rgba(0, 255, 0, 0.3); opacity: 1; }
+    100% { background-color: rgba(0, 255, 0, 0); opacity: 0; }
+  }
+  @keyframes incorrectFlash {
+    0% { background-color: rgba(255, 0, 0, 0); opacity: 0; }
+    50% { background-color: rgba(255, 0, 0, 0.3); opacity: 1; }
+    100% { background-color: rgba(255, 0, 0, 0); opacity: 0; }
+  }
+  .flash-correct-active { animation: correctFlash 0.3s ease-out forwards; }
+  .flash-incorrect-active { animation: incorrectFlash 0.3s ease-out forwards; }
+
+  /* 옵션 화면 모달 */
+  #optionsScreen {
+    display: none;
+    flex-direction: row; /* 가로배치 */
+    justify-content: space-around;
+    align-items: flex-start;
+    background-color: #34495e;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    padding: 40px 60px;
+    width: 90%;
+    max-width: 900px;
+    height: 90%;
+    max-height: 500px;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    gap: 40px;
+  }
+  #optionsScreen h2 {
+    font-family: 'Jua', sans-serif;
+    color: #f1c40f;
+    font-size: 2.5em;
+    margin-bottom: 30px;
+    width: 100%;
+    text-align: center;
+  }
+  .options-group {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    min-width: 180px;
+    align-items: flex-start;
+  }
+  .options-group label {
+    font-size: 1.6em;
+    margin-bottom: 15px;
+    color: #ecf0f1;
+    font-weight: bold;
+    text-align: left;
+    width: 100%;
+  }
+  .options-toggle-button {
+    width: 100%;
+    font-size: 1.6em;
+    padding: 10px 0;
+    margin-bottom: 10px;
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  }
+  .options-toggle-button:hover {
+    background-color: #303f9f;
+    transform: translateY(-2px);
+  }
+  .options-toggle-button.active {
+    background-color: #28a745;
+    box-shadow: 3px 3px 7px rgba(40, 167, 69, 0.4);
+  }
+  body.dark-mode .options-toggle-button.active {
+    background-color: #1e7e34;
+  }
+  #optionsCloseButton {
+    background-color: #e74c3c;
+    color: white;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.8em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    margin-top: auto;
+  }
+  #optionsCloseButton:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+  }
+
+  /* 패치노트 모달 */
+  #patchNotesModal {
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #34495e;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    padding: 40px;
+    width: 90%;
+    max-width: 800px;
+    height: 90%;
+    max-height: 600px;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  #patchNotesModal h2 {
+    font-family: 'Jua', sans-serif;
+    color: #f1c40f;
+    font-size: 2.5em;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  #patchNotesContent {
+    width: 100%;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    line-height: 1.8;
+    text-align: left;
+  }
+  /* 패치노트 HTML 요소 스타일 */
+  #patchNotesContent h3 {
+    color: #f1c40f;
+    font-size: 1.5em;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    border-bottom: 2px solid #f1c40f;
+    padding-bottom: 5px;
+  }
+  #patchNotesContent ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  #patchNotesContent ul li {
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 20px;
+  }
+  /* 버전 헤딩 스타일 (수정됨) */
+  #patchNotesContent ul li.patch-version-heading {
+      color: #6aabff; /* 파란색으로 버전 강조 */
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 5px;
+  }
+  #patchNotesContent ul li.patch-version-heading::before {
+      content: '▸'; /* 화살표 불릿 */
+      color: #6aabff;
+      font-size: 1.2em;
+      left: 0;
+      top: -2px;
+  }
+  /* 실제 패치 내용 아이템 */
+  #patchNotesContent ul li.patch-note-item {
+      font-size: 0.95em;
+      padding-left: 25px; /* 들여쓰기 */
+      color: #ccc; /* 내용 글씨색 */
+  }
+  #patchNotesContent ul li.patch-note-item::before {
+      content: '•';
+      color: #2ecc71;
+      font-size: 1em;
+      left: 10px; /* 불릿 위치 조정 */
+      top: 0px;
+  }
+
+  #patchNotesCloseButton {
+    background-color: #607d8b;
+    color: white;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.8em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    margin-top: 30px;
+  }
+  #patchNotesCloseButton:hover {
+    background-color: #455a64;
+    transform: translateY(-2px);
+  }
+
+
+  /* 반응형 모바일 */
+  @media (max-width: 768px) {
+    #startScreen h1 {
+      font-size: 2.2em;
+      margin-bottom: 20px;
+    }
+    .menu-buttons-container {
+      width: 90%;
+      gap: 10px;
+    }
+    .menu-button {
+      font-size: 1.3em;
+      padding: 15px 25px;
+    }
+    #quizGameContainer, #startScreen, #gameOverScreen, #optionsScreen, #patchNotesModal {
+      padding: 20px;
+    }
+    #player-container {
+      margin-bottom: 20px;
+    }
+    .option-button {
+      font-size: 1.1em;
+      padding: 10px 15px;
+      min-width: 100px;
+      max-width: calc(50% - 12px);
+    }
+    #feedbackMessage {
+      font-size: 1.3em;
+    }
+    #nextButton, #restartButton, .options-toggle-button {
+      font-size: 1.5em;
+      padding: 12px 30px;
+    }
+    #gameOverScreen h2 {
+      font-size: 2.5em;
+    }
+    #finalScore {
+      font-size: 2em;
+    }
+    #scoreLivesContainer {
+        font-size: 1.2em;
+    }
+    #optionsScreen {
+      flex-direction: column !important;
+      max-width: 600px !important;
+      gap: 25px !important;
+      padding: 40px 30px !important;
+      height: 90% !important;
+      max-height: 500px !important;
+    }
+    .options-group {
+      width: 100% !important;
+      align-items: center !important;
+    }
+    .options-group label {
+      text-align: center !important;
+    }
+    .options-toggle-button {
+      width: 80% !important;
+      font-size: 1.5em !important;
+    }
+    /* 패치노트 모달 모바일 최적화 */
+    #patchNotesModal h2 {
+      font-size: 2em;
+      margin-bottom: 15px;
+    }
+    #patchNotesContent h3 {
+      font-size: 1.3em;
+      margin-top: 15px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .option-button {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- 시작 화면 -->
+  <div id="startScreen">
+    <h1>나는 고수를 구분할 수 있을까? 🤔</h1>
+    <div class="menu-buttons-container">
+      <button id="startButton" class="menu-button">시작 🚀</button>
+      <button id="optionsButton" class="menu-button">옵션 ⚙️</button>
+      <button id="discordButton" class="menu-button">디스코드 👾</button>
+      <button id="patchNotesButton" class="menu-button">패치노트 📝</button>
+    </div>
+  </div>
+
+  <!-- 퀴즈 게임 컨테이너 -->
+  <div id="quizGameContainer">
+    <div id="player-container"><div id="player"></div><div id="player-loading-spinner"></div></div>
+    <div id="optionsContainer"></div>
+    <div id="feedbackMessage"></div>
+    <button id="nextButton">다음 ➡️</button>
+    <!-- 퀴즈 중 메뉴로 돌아가기 버튼 -->
+    <button id="returnToMenuBtn" class="menu-button" style="background-color: #607d8b; margin-top: 20px;">
+        메뉴로 돌아가기
+    </button>
+    <div id="scoreLivesContainer">
+      <div id="scoreDisplay">점수: 0</div>
+      <div id="livesDisplay">목숨: ❤️❤️❤️</div>
+    </div>
+  </div>
+
+  <!-- 게임 오버 화면 -->
+  <div id="gameOverScreen">
+    <h2>게임 종료! 🎉</h2>
+    <div id="finalScore"> 최종 점수: 0점 </div>
+    <button id="restartButton">다시 시작하기 🔄</button>
+  </div>
+
+  <!-- 화면 번쩍이는 효과를 위한 오버레이 -->
+  <div id="flashOverlay"></div>
+
+  <!-- 옵션 설정 화면 -->
+  <div id="optionsScreen">
+    <h2>설정 ⚙️</h2>
+    <div class="options-group">
+      <label for="darkModeToggle">야간 모드</label>
+      <button id="darkModeToggle" class="options-toggle-button">비활성화</button>
+    </div>
+    <div class="options-group">
+      <label for="colorBlindModeToggle">색맹 모드 (정답/오답 색상)</label>
+      <button id="colorBlindModeToggle" class="options-toggle-button">비활성화</button>
+    </div>
+    <div class="options-group">
+      <label for="reduceMotionToggle">광과민성 발작 방지 모드 (번쩍임 효과 제거)</label>
+      <button id="reduceMotionToggle" class="options-toggle-button">비활성화</button>
+    </div>
+    <button id="optionsCloseButton" class="menu-button">닫기</button>
+  </div>
+
+  <!-- 패치노트 모달 -->
+  <div id="patchNotesModal">
+    <h2>패치노트 📝</h2>
+    <div id="patchNotesContent">
+      <!-- 패치노트 내용이 JavaScript에서 동적으로 생성됩니다. -->
+    </div>
+    <button id="patchNotesCloseButton" class="menu-button">닫기</button>
+  </div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  let player;
+  let isPlayerReady = false;
+  let currentVideoEndTime = -1; // 현재 재생 중인 영상의 종료 시간
+  let videoEndInterval; // 영상 종료를 체크할 인터벌
+
+  const categories = ["일반", "4군", "3군", "2군", "1군", "주력", "강주력", "선수급"];
+  const MAX_LIVES = 5;
+
+  // --- 패치노트 데이터 (여기서 내용 관리!) ---
+  const patchNotesData = [
+    {
+      version: "1.0.8",
+      date: "2025.08.15", // 기존 1.0.7과 동일한 날짜
+      notes: [
+        "패치노트 날짜별 묶음 기능 개선: 이제 같은 날짜 패치는 한 번의 헤딩으로 표시됩니다.",
+        "패치노트 UI 개선: 버전별 구분 및 내용 가독성 향상"
+      ]
+    },
+    {
+      version: "1.0.7",
+      date: "2025.08.15",
+      notes: [
+        "긴급 공지 기능 제거 (이제 불필요한 기능은 삭제!)",
+        "패치노트 내용 JS 관리 방식으로 전환: AI가 '미리' 작성해준 내용을 복붙하면 끝!",
+        "패치노트 관리 방식 안내: 뤼튼 등 텍스트 생성 AI를 활용하면 더 쉽게 작성 가능!"
+      ]
+    },
+    {
+      version: "1.0.6",
+      date: "2025.08.14",
+      notes: [
+        "유튜브 영상 특정 구간 재생 기능 추가 (시작/종료 시간 설정 가능)"
+      ]
+    },
+    {
+      version: "1.0.5",
+      date: "2025.08.13",
+      notes: [
+        "패치노트 기능 추가: 이제 이 화면에서 업데이트 내역 확인 가능!",
+        "퀴즈 중 '메뉴로 돌아가기' 버튼 추가: 확인 절차를 통해 실수 방지",
+        "옵션 UI 개선: PC 환경에서 설정창 가로로 넓게 재배치"
+      ]
+    },
+    {
+      version: "1.0.4",
+      date: "2025.08.13",
+      notes: [
+        "접근성 옵션 추가: 야간 모드, 색맹 모드, 광과민성 발작 방지 모드 (번쩍임 효과 제거)",
+        "설정값 LocalStorage에 저장: 앱 종료 후에도 설정 유지"
+      ]
+    },
+    {
+      version: "1.0.3",
+      date: "2025.08.12",
+      notes: [
+        "퀴즈 정/오답 시 화면 번쩍임 효과 추가: 시각적 피드백 강화",
+        "목숨 시스템 구현: 시작 3개, 틀리면 차감, 3연속 정답 시 1개 획득 (최대 5개)"
+      ]
+    },
+    {
+      version: "1.0.2",
+      date: "2025.08.12",
+      notes: [
+        "메인 메뉴 UI 디자인 개선: 버튼 간격 및 전체적인 넓이 조정",
+        "유튜브 영상 기반 퀴즈 시스템 구축: 문제에 영상 포함"
+      ]
+    },
+    {
+      version: "1.0.1",
+      date: "2025.08.11",
+      notes: [
+        "초기 버전 출시: '나는 고수를 구분할 수 있을까?' 퀴즈 게임 시작"
+      ]
+    }
+  ];
+
+  // 문제 데이터 - 유튜브 영상 ID, 정답 등급, 시작/종료 시간
+  const questions = [
+{ youtubeId: "4wmi_guc8ZM", answerCategory: "주력"}, 
+{ youtubeId: "HgdpVld1M60", answerCategory: "주력"}, 
+{ youtubeId: "0i8UI6HmUUI", answerCategory: "2군"}, 
+{ youtubeId: "-Vb3_eAQddc", answerCategory: "3군"}, 
+{ youtubeId: "VDIEVttNMzY", answerCategory: "3군"}, 
+{ youtubeId: "go5t5sn7g4c", answerCategory: "3군"}, 
+{ youtubeId: "dzJTA_IqKRY", answerCategory: "1군"}, 
+{ youtubeId: "xGWyI1CRLOU", answerCategory: "2군"}, 
+{ youtubeId: "e1Q53xjKaCo", answerCategory: "1군"}, 
+{ youtubeId: "jc338Na84VA", answerCategory: "1군"},    // 여기에 문제를 더 추가할 수 있어!
+    // { youtubeId: "새로운_영상_ID", answerCategory: "정답_등급", startTime: 0, endTime: 60 },
+  ];
+
+  let shuffledQuestions = []; // 현재 게임 세션의 무작위 문제 순서를 저장할 배열
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let lives = 3;
+  let consecutiveCorrectAnswers = 0;
+  let selectedOptionIndex = null;
+
+  const htmlBody = document.body;
+  const startScreen = document.getElementById('startScreen');
+  const quizGameContainer = document.getElementById('quizGameContainer');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const optionsScreen = document.getElementById('optionsScreen');
+  const patchNotesModal = document.getElementById('patchNotesModal');
+  const startButton = document.getElementById('startButton');
+  const optionsButton = document.getElementById('optionsButton');
+  const discordButton = document.getElementById('discordButton');
+  const patchNotesButton = document.getElementById('patchNotesButton');
+  const playerLoadingSpinner = document.getElementById('player-loading-spinner');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const feedbackMessage = document.getElementById('feedbackMessage');
+  const nextButton = document.getElementById('nextButton');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const livesDisplay = document.getElementById('livesDisplay');
+  const finalScore = document.getElementById('finalScore');
+  const restartButton = document.getElementById('restartButton');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const returnToMenuBtn = document.getElementById('returnToMenuBtn');
+
+  // 옵션 토글 버튼들
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const colorBlindModeToggle = document.getElementById('colorBlindModeToggle');
+  const reduceMotionToggle = document.getElementById('reduceMotionToggle');
+  const optionsCloseButton = document.getElementById('optionsCloseButton');
+  // 모달 닫기 버튼들
+  const patchNotesCloseButton = document.getElementById('patchNotesCloseButton');
+
+  let settings = {
+    darkMode: false,
+    colorBlindMode: false,
+    reduceMotion: false
+  };
+
+  // --- 설정 관련 함수 ---
+  function loadSettings() {
+    const savedSettings = JSON.parse(localStorage.getItem('gameSettings'));
+    if (savedSettings) {
+      settings = { ...settings, ...savedSettings };
+    }
+    applySettings();
+  }
+
+  function applySettings() {
+    htmlBody.classList.toggle('dark-mode', settings.darkMode);
+    darkModeToggle.textContent = settings.darkMode ? '활성화' : '비활성화';
+    darkModeToggle.classList.toggle('active', settings.darkMode);
+
+    htmlBody.classList.toggle('color-blind-mode', settings.colorBlindMode);
+    colorBlindModeToggle.textContent = settings.colorBlindMode ? '활성화' : '비활성화';
+    colorBlindModeToggle.classList.toggle('active', settings.colorBlindMode);
+
+    htmlBody.classList.toggle('reduce-motion-mode', settings.reduceMotion);
+    reduceMotionToggle.textContent = settings.reduceMotion ? '활성화' : '비활성화';
+    reduceMotionToggle.classList.toggle('active', settings.reduceMotion);
+  }
+
+  function saveSettings() {
+    localStorage.setItem('gameSettings', JSON.stringify(settings));
+  }
+
+  // --- 화면 전환 관련 함수 ---
+  function hideAllScreens() {
+    startScreen.style.display = 'none';
+    quizGameContainer.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    optionsScreen.style.display = 'none';
+    patchNotesModal.style.display = 'none';
+  }
+
+  function showScreen(screenElement) {
+    hideAllScreens();
+    screenElement.style.display = 'flex';
+    setTimeout(() => {
+      screenElement.style.opacity = '1';
+      screenElement.style.transform = 'translateY(0)';
+    }, 100);
+  }
+
+  function openOptionsScreen() {
+    showScreen(optionsScreen);
+  }
+
+  function closeOptionsScreen() {
+    showScreen(startScreen);
+  }
+
+  function openPatchNotesScreen() {
+    populatePatchNotes(); // 패치노트 내용 동적 생성
+    showScreen(patchNotesModal);
+  }
+
+  function closePatchNotesScreen() {
+    showScreen(startScreen);
+  }
+
+  // --- 유튜브 플레이어 관련 함수 ---
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      videoId: 'vBfPzVd0y1s', // 초기 로드할 더미 영상 ID (필수)
+      playerVars: {
+        'playsinline': 1,
+        'autoplay': 0,
+        'rel': 0,
+        'controls': 1,
+        'enablejsapi': 1
+      },
+      events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
+    });
+  }
+
+  function onPlayerReady() {
+    isPlayerReady = true;
+    playerLoadingSpinner.style.display = 'none';
+  }
+
+  function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PLAYING) {
+      playerLoadingSpinner.style.display = 'none';
+      if (currentVideoEndTime !== -1) {
+          videoEndInterval = setInterval(() => {
+              if (player.getCurrentTime() >= currentVideoEndTime) {
+                  player.pauseVideo();
+                  clearInterval(videoEndInterval);
+              }
+          }, 100);
+      }
+    } else if (event.data == YT.PlayerState.BUFFERING) {
+      playerLoadingSpinner.style.display = 'block';
+      clearInterval(videoEndInterval);
+    } else {
+      clearInterval(videoEndInterval);
+    }
+  }
+
+  // --- UI 업데이트 함수 ---
+  function updateLivesDisplay() {
+    let hearts = '';
+    for (let i = 0; i < lives; i++) {
+      hearts += '❤️';
+    }
+    livesDisplay.innerHTML = `목숨: ${hearts}`;
+  }
+
+  function triggerFlash(type) {
+    if (settings.reduceMotion) {
+      flashOverlay.classList.remove('flash-correct-active', 'flash-incorrect-active');
+      return;
+    }
+    flashOverlay.classList.remove('flash-correct-active', 'flash-incorrect-active');
+    if (type === 'correct') {
+      flashOverlay.classList.add('flash-correct-active');
+    } else if (type === 'incorrect') {
+      flashOverlay.classList.add('flash-incorrect-active');
+    }
+    setTimeout(() => {
+      flashOverlay.classList.remove('flash-correct-active', 'flash-incorrect-active');
+    }, 500);
+  }
+
+  // --- 패치노트 내용 동적 생성 (날짜별 묶음 및 버전별 정렬 개선) ---
+  function populatePatchNotes() {
+    const contentDiv = document.getElementById('patchNotesContent');
+    contentDiv.innerHTML = '';
+
+    const groupedByDate = {};
+    patchNotesData.forEach(patch => {
+        if (!groupedByDate[patch.date]) {
+            groupedByDate[patch.date] = [];
+        }
+        groupedByDate[patch.date].push(patch);
+    });
+
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+        const dateA = new Date(a.replace(/\./g, '-'));
+        const dateB = new Date(b.replace(/\./g, '-'));
+        return dateB - dateA;
+    });
+
+    sortedDates.forEach(date => {
+        const dateSection = document.createElement('div');
+        dateSection.innerHTML = `<h3>${date}</h3>`;
+
+        const ul = document.createElement('ul');
+        groupedByDate[date].sort((a, b) => {
+            const parseVersion = (v) => v.split('.').map(Number);
+            const versionA = parseVersion(a.version);
+            const versionB = parseVersion(b.version);
+            for (let i = 0; i < Math.max(versionA.length, versionB.length); i++) {
+                const numA = versionA[i] || 0;
+                const numB = versionB[i] || 0;
+                if (numA !== numB) return numB - numA;
+            }
+            return 0;
+        }).forEach(patch => {
+            const versionLi = document.createElement('li');
+            versionLi.classList.add('patch-version-heading');
+            versionLi.textContent = `v${patch.version}:`;
+            ul.appendChild(versionLi);
+
+            patch.notes.forEach(note => {
+                const noteLi = document.createElement('li');
+                noteLi.classList.add('patch-note-item');
+                noteLi.textContent = note;
+                ul.appendChild(noteLi);
+            });
+        });
+        dateSection.appendChild(ul);
+        contentDiv.appendChild(dateSection);
+    });
+  }
+
+  // --- 배열 섞기 함수 (Fisher-Yates shuffle) ---
+  function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]]; // 요소 교환
+      }
+      return array;
+  }
+
+  // --- 게임 로직 함수 ---
+  function loadQuestion(index) {
+    feedbackMessage.style.opacity = '0';
+    nextButton.style.display = 'none';
+    optionsContainer.innerHTML = '';
+    selectedOptionIndex = null;
+    clearInterval(videoEndInterval);
+
+    if (index < shuffledQuestions.length) { // 섞인 문제 배열 사용
+      const q = shuffledQuestions[index]; // 섞인 문제에서 가져오기
+      if (isPlayerReady && player) {
+          playerLoadingSpinner.style.display = 'block';
+          player.loadVideoById({
+              videoId: q.youtubeId,
+              startSeconds: q.startTime || 0
+          });
+          currentVideoEndTime = q.endTime || -1;
+      } else {
+          console.error("YouTube Player is not ready yet.");
+      }
+
+      categories.forEach((category, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = category;
+        btn.classList.add('option-button');
+        btn.addEventListener('click', () => selectOption(i));
+        optionsContainer.appendChild(btn);
+      });
+    } else {
+      showGameOverScreen();
+    }
+  }
+
+  function selectOption(selectedIndex) {
+    if (selectedOptionIndex !== null) return;
+    if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+      player.pauseVideo();
+    }
+    clearInterval(videoEndInterval);
+
+    selectedOptionIndex = selectedIndex;
+    const currentQuestion = shuffledQuestions[currentQuestionIndex]; // 섞인 문제 배열 사용
+    const correctIndex = categories.indexOf(currentQuestion.answerCategory);
+    const optionButtons = document.querySelectorAll('.option-button');
+
+    optionButtons.forEach(btn => btn.disabled = true);
+
+    if (selectedIndex === correctIndex) {
+      feedbackMessage.textContent = "정답! 역시 고수군 😎";
+      feedbackMessage.classList.remove('wrong');
+      feedbackMessage.classList.add('correct');
+      score++;
+      scoreDisplay.textContent = `점수: ${score}`;
+      consecutiveCorrectAnswers++;
+      triggerFlash('correct');
+
+      if (consecutiveCorrectAnswers === 3) {
+        if (lives < MAX_LIVES) {
+          lives++;
+          feedbackMessage.textContent += " 목숨 1개 획득! 🎉";
+        } else {
+          feedbackMessage.textContent += " 목숨 최대치! 💪";
+        }
+        consecutiveCorrectAnswers = 0;
+      }
+    } else {
+      feedbackMessage.textContent = "아쉽지만 틀렸어 😥 좀 더 고수의 길을 걷자!";
+      feedbackMessage.classList.remove('correct');
+      feedbackMessage.classList.add('wrong');
+
+      optionButtons[correctIndex].style.backgroundColor = '#2ecc71';
+      optionButtons[selectedIndex].style.backgroundColor = '#e74c3c';
+
+      lives--;
+      consecutiveCorrectAnswers = 0;
+      triggerFlash('incorrect');
+
+      if (lives <= 0) {
+        feedbackMessage.textContent += " 목숨 소진! 💀";
+        updateLivesDisplay();
+        setTimeout(() => showGameOverScreen(), 1000);
+        return;
+      }
+    }
+    updateLivesDisplay();
+    feedbackMessage.style.opacity = '1';
+    nextButton.style.display = 'block';
+  }
+
+  function showGameOverScreen() {
+    quizGameContainer.style.opacity = '0';
+    quizGameContainer.style.transform = 'translateY(-20px)';
+    if (player) player.stopVideo();
+    clearInterval(videoEndInterval);
+    setTimeout(() => {
+      quizGameContainer.style.display = 'none';
+      showScreen(gameOverScreen);
+    }, 500);
+    finalScore.textContent = `최종 점수: ${score}점`;
+  }
+
+  // --- 이벤트 리스너 ---
+  startButton.addEventListener('click', () => {
+    hideAllScreens();
+    showScreen(quizGameContainer);
+    resetGameState(); // 게임 시작 시 상태 초기화 및 문제 섞기
+    loadQuestion(currentQuestionIndex);
+  });
+
+  optionsButton.addEventListener('click', openOptionsScreen);
+  discordButton.addEventListener('click', () => {
+    const discordLink = 'https://discord.gg/nYWExhkYeG'; // TODO: 디스코드 링크 설정!
+    alert('디스코드 커뮤니티로 이동할게!');
+    window.open(discordLink, '_blank');
+  });
+  patchNotesButton.addEventListener('click', openPatchNotesScreen);
+
+  darkModeToggle.addEventListener('click', () => {
+    settings.darkMode = !settings.darkMode;
+    applySettings();
+    saveSettings();
+  });
+  colorBlindModeToggle.addEventListener('click', () => {
+    settings.colorBlindMode = !settings.colorBlindMode;
+    applySettings();
+    saveSettings();
+  });
+  reduceMotionToggle.addEventListener('click', () => {
+    settings.reduceMotion = !settings.reduceMotion;
+    applySettings();
+    saveSettings();
+  });
+  optionsCloseButton.addEventListener('click', closeOptionsScreen);
+  patchNotesCloseButton.addEventListener('click', closePatchNotesScreen);
+
+  nextButton.addEventListener('click', () => {
+    currentQuestionIndex++;
+    loadQuestion(currentQuestionIndex);
+  });
+
+  // 게임 재시작 및 메뉴 돌아가기 로직 (resetGameState로 통합 관리)
+  function resetGameState() {
+    currentQuestionIndex = 0;
+    score = 0;
+    lives = 3;
+    consecutiveCorrectAnswers = 0;
+    scoreDisplay.textContent = `점수: 0`;
+    updateLivesDisplay();
+    selectedOptionIndex = null;
+    feedbackMessage.textContent = '';
+    feedbackMessage.style.opacity = '0';
+    nextButton.style.display = 'none';
+    clearInterval(videoEndInterval);
+    if (player) {
+      player.stopVideo();
+      player.loadVideoById({ videoId: 'vBfPzVd0y1s', startSeconds: 0 });
+      currentVideoEndTime = -1;
+    }
+
+    // 새로운 게임 시작 시 문제 순서 섞기
+    shuffledQuestions = shuffleArray([...questions]); // 원본 배열을 훼손하지 않기 위해 복사 후 섞기
+  }
+
+  restartButton.addEventListener('click', () => {
+    gameOverScreen.style.opacity = '0';
+    gameOverScreen.style.transform = 'translateY(-20px)';
+    setTimeout(() => {
+      gameOverScreen.style.display = 'none';
+      resetGameState(); // 다시 시작 시 상태 초기화 및 문제 섞기
+      showScreen(startScreen);
+    }, 500);
+  });
+
+  returnToMenuBtn.addEventListener('click', () => {
+    const confirmLeave = confirm('퀴즈 진행 중 메뉴로 돌아가면 현재 진행 정보가 초기화됩니다. 계속하시겠어요?');
+    if (confirmLeave) {
+      resetGameState(); // 메뉴로 돌아갈 때 상태 초기화 및 문제 섞기
+      hideAllScreens();
+      showScreen(startScreen);
+    }
+  });
+
+  // --- 초기 로드 시 실행 ---
+  loadSettings();
+  populatePatchNotes(); // 페이지 로드 시 패치노트 내용 채우기 (정렬된 방식으로)
+  // 처음 페이지 로드 시 게임 상태 초기화 및 문제 섞기
+  // 이렇게 하면 시작 버튼 누르자마자 첫 게임 세션이 바로 랜덤 순서로 준비됨
+  resetGameState();
+</script>
+</body>
+</html>
